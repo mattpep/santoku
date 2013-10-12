@@ -1,0 +1,74 @@
+#!/usr/bin/ruby
+
+refname = ARGV[0]
+oldrev  = ARGV[1]
+newrev  = ARGV[2]
+
+# --- Safety check
+if ENV['GIT_DIR'].nil?
+	$stderr.puts "Don't run this script from the command line."
+	$stderr.puts " (if you want, you could supply GIT_DIR then run"
+	$stderr.puts "  $0 <ref> <oldrev> <newrev>)"
+	exit 1
+end
+
+if refname.nil? || oldrev.nil? || newrev.nil?
+	$stderr.puts "Usage: $0 <ref> <oldrev> <newrev>"
+	exit 1
+end
+
+# if $newrev is 0000...0000, it's a commit to delete a ref.
+zero="0000000000000000000000000000000000000000"
+if newrev == zero
+	newrev_type = :delete
+  exit 0
+else
+	newrev_type=`git cat-file -t #{newrev}`
+end
+
+# only care about pushes to the master head
+if refname != "refs/heads/master"
+  $stderr.puts "Ignoring push to unexpected ref #{refname}.  The chef server will not be updated"
+else
+  magic_path = "/tmp/santoku-#{$$}"
+  `git clone -l  . #{magic_path}`
+  updated_cookbooks = []
+  updated_bags      = []
+  changed_files     = `git diff --name-only #{oldrev}..#{newrev}`
+  changed_files.split("\n").each do |file|
+    if file =~ /^environments/
+      $stderr.puts "Updating environment"
+      `knife environment from file #{magic_path}/#{file}`
+
+    elsif file =~ /^node/
+      $stderr.puts 'Updating node'
+      `knife node from file #{magic_path}/#{file}`
+
+    elsif file =~ /^role/
+      $stderr.puts 'Updating role'
+      `knife role from file #{magic_path}/#{file}`
+
+    elsif file =~ /^cookbooks\/([^\/]+)\//
+      if updated_cookbooks.count $1 == 0
+        $stderr.puts "Updating cookbook #{$1}"
+        `knife cookbook update #{cookbook}`
+        updated_cookbooks << $1
+      end
+
+    elsif file =~ /^data_bags\/([^\/]+)\//
+      if updated_bags.count $1 == 0
+        $stderr.puts "Updating databag #{$1}"
+        `knife data bag #{$1} from file #{magic_path}/#{file}`
+        updated_bags << $1
+      end
+    else
+      $stderr.puts "#{file} was modified but I don't know how to handle that. You might need to use knife manually. Better yet, update this script."
+      exit 1
+    end
+  end
+  `rm -rf #{magic_path}`
+  
+end
+
+# All done!
+exit 0
