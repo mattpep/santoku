@@ -15,7 +15,8 @@ Or maybe you like having just one consistent interface. Heroku applications are 
 Installation
 ============
 Create a bare checkout of your chef repo. Where you put this doesn't matter, but conceptually it's probably best to go onto your chef server itself.
-You'll need to set up any ssh keys; how you do this is up to you and will depend on whether you use gitosis, gitlab etc.
+You'll need to set up any ssh keys to allow you to push to this repo; how you do this is up to you and will depend on whether you use gitosis, gitlab etc.
+This article is likely to be useful: http://git-scm.com/book/en/Git-on-the-Server-Setting-Up-the-Server
 
 Copy the `upload` script to the `hooks` directory of that repo.
 
