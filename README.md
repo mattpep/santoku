@@ -42,10 +42,10 @@ you would otherwise run the knife tool), just push to the `deploy` remote:
 
 Limitations
 ===========
-* Deleted revisions (e.g. as during a rebase) aren't tested. 
+* Deleted revisions (e.g. as during a rebase/force push) aren't handled.
 * There is lots of hardcoding.  The branch `master` is enforced.
 * It's not tolerant of changes to files in paths it doesn't know about. *Perhaps this is overzealous. As people might use different layouts in their repos I wanted to raise attention to the possibility of files being missed.*
-
+* It doesn't work on github (because this is written as a hook for update rather than post-receive).
 
 Choice of name?
 ===============
