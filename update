@@ -31,34 +31,34 @@ if refname != "refs/heads/master"
   STDERR.puts "Ignoring push to unexpected ref #{refname}.  The chef server will not be updated"
 else
   magic_path = "/tmp/santoku-#{$$}"
-  `git clone -l  . #{magic_path}`
+  system "git clone -l  . #{magic_path}"
   updated_cookbooks = []
   updated_bags      = []
   changed_files     = `git diff --name-only #{oldrev}..#{newrev}`
   changed_files.split("\n").each do |file|
     if file =~ /^environments/
-      `knife environment from file #{magic_path}/#{file}`
       STDERR.puts "Updating environment"
+      system "knife environment from file #{magic_path}/#{file}"
 
     elsif file =~ /^node/
-      `knife node from file #{magic_path}/#{file}`
       STDERR.puts 'Updating node'
+      system "knife node from file #{magic_path}/#{file}"
 
     elsif file =~ /^role/
-      `knife role from file #{magic_path}/#{file}`
       STDERR.puts 'Updating role'
+      system "knife role from file #{magic_path}/#{file}"
 
     elsif file =~ /^cookbooks\/([^\/]+)\//
       if updated_cookbooks.count $1 == 0
-        `knife cookbook update #{cookbook}`
         STDERR.puts "Updating cookbook #{$1}"
+        system "knife cookbook update #{cookbook}"
         updated_cookbooks << $1
       end
 
     elsif file =~ /^data_bags\/([^\/]+)\//
       if updated_bags.count $1 == 0
-        `knife data bag from file #{$1} #{magic_path}/#{file}`
         STDERR.puts "Updating databag #{$1}"
+        system "knife data bag from file #{$1} #{magic_path}/#{file}"
         updated_bags << $1
       end
     else
@@ -66,7 +66,7 @@ else
       exit 1
     end
   end
-  `rm -rf #{magic_path}`
+  system "rm -rf #{magic_path}"
   
 end
 
